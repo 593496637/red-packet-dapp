@@ -1,13 +1,9 @@
 import { useQuery, gql } from "@apollo/client";
-import {
-  useAccount,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
+import { useAccount } from "wagmi";
 import { contractAddress, contractAbi } from "../contracts/RedPacketSystem";
 import { formatEther } from "viem";
-import toast from "react-hot-toast";
 import { useEffect } from "react";
+import { useContractTransaction } from "../hooks/useContractTransaction";
 
 // TypeScript interfaces
 interface Claim {
@@ -64,22 +60,7 @@ export function RedPacketList() {
     return () => stopPolling();
   }, [startPolling, stopPolling]);
 
-  const {
-    data: hash,
-    writeContract,
-    isPending,
-    error: claimError,
-  } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({ hash });
-
-  // 监听交易状态并显示通知
-  useEffect(() => {
-    if (isConfirming) toast.loading("正在抢红包...", { id: hash });
-    if (isConfirmed) toast.success("抢到了！", { id: hash });
-    if (claimError)
-      toast.error(claimError.message || "抢红包失败", { id: hash });
-  }, [isConfirming, isConfirmed, claimError, hash]);
+  const { writeContract, isPending, isConfirming } = useContractTransaction("claim");
 
   const handleClaim = (packetId: string) => {
     writeContract({

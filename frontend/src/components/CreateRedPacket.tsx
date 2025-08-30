@@ -1,12 +1,8 @@
-// frontend/src/components/CreateRedPacket.tsx
 import { useState, useEffect } from "react";
-import {
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useAccount,
-} from "wagmi";
+import { useAccount } from "wagmi";
 import { parseEther } from "viem";
 import { contractAddress, contractAbi } from "../contracts/RedPacketSystem";
+import { useContractTransaction } from "../hooks/useContractTransaction";
 import toast from "react-hot-toast";
 
 export function CreateRedPacket() {
@@ -16,29 +12,16 @@ export function CreateRedPacket() {
   const [amount, setAmount] = useState("");
   const [isEven, setIsEven] = useState(false);
 
-  const { data: hash, writeContract, isPending, error } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash,
-    });
+  const { writeContract, isPending, isConfirming, isConfirmed } = useContractTransaction("create");
 
   useEffect(() => {
-    if (isConfirming) {
-      toast.loading("正在创建红包...", { id: "create" });
-    }
     if (isConfirmed) {
-      toast.success("红包创建成功！", { id: "create" });
-      // 成功后清空表单
       setMessage("");
       setCount("");
       setAmount("");
       setIsEven(false);
     }
-    if (error) {
-      toast.error(error.message || "创建失败", { id: "create" });
-    }
-  }, [isConfirming, isConfirmed, error]);
+  }, [isConfirmed]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
