@@ -1,0 +1,35 @@
+# 通用依赖文件夹
+# Universal dependency folder
+node_modules/
+
+# 通用环境变量文件 (非常重要，避免私钥泄露)
+# Universal environment variable files (very important to prevent private key leaks)
+.env
+.env.*
+!.env.example
+
+# Hardhat (智能合约) 相关
+# Hardhat (Smart Contract) specific
+contracts/cache/
+contracts/artifacts/
+contracts/typechain-types/
+
+# Vite / React (前端) 相关
+# Vite / React (Frontend) specific
+frontend/dist/
+frontend/.vite/
+*.log
+
+# The Graph (数据索引) 相关
+# The Graph (Subgraph) specific
+subgraph/build/
+subgraph/generated/
+
+# 操作系统/IDE 配置文件
+# OS / IDE config files
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.idea/
+.vscode/

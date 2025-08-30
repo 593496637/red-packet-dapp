@@ -1,0 +1,48 @@
+type AlreadyClaimed @entity(immutable: true) {
+  id: Bytes!
+  packetId: BigInt! # uint256
+  claimer: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type FundsWithdrawn @entity(immutable: true) {
+  id: Bytes!
+  packetId: BigInt! # uint256
+  owner: Bytes! # address
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PacketClaimed @entity(immutable: true) {
+  id: Bytes!
+  packetId: BigInt! # uint256
+  claimer: Bytes! # address
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PacketCreated @entity(immutable: true) {
+  id: Bytes!
+  packetId: BigInt! # uint256
+  creator: Bytes! # address
+  message: String! # string
+  totalAmount: BigInt! # uint256
+  totalCount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PacketEmpty @entity(immutable: true) {
+  id: Bytes!
+  packetId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

@@ -1,0 +1,38 @@
+specVersion: 1.3.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: RedPacketSystem
+    network: sepolia
+    source:
+      address: "0xd6cA8BA92a4f0e4fBc777383C6C141022cC4945d"
+      abi: RedPacketSystem
+      startBlock: 9093069
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - AlreadyClaimed
+        - FundsWithdrawn
+        - PacketClaimed
+        - PacketCreated
+        - PacketEmpty
+      abis:
+        - name: RedPacketSystem
+          file: ./abis/RedPacketSystem.json
+      eventHandlers:
+        - event: AlreadyClaimed(indexed uint256,indexed address)
+          handler: handleAlreadyClaimed
+        - event: FundsWithdrawn(indexed uint256,indexed address,uint256)
+          handler: handleFundsWithdrawn
+        - event: PacketClaimed(indexed uint256,indexed address,uint256)
+          handler: handlePacketClaimed
+        - event: PacketCreated(indexed uint256,indexed address,string,uint256,uint256)
+          handler: handlePacketCreated
+        - event: PacketEmpty(indexed uint256)
+          handler: handlePacketEmpty
+      file: ./src/red-packet-system.ts
