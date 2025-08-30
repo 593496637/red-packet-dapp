@@ -36,7 +36,7 @@ export function CreateRedPacket() {
       setIsEven(false);
     }
     if (error) {
-      toast.error(error.shortMessage || "创建失败", { id: "create" });
+      toast.error(error.message || "创建失败", { id: "create" });
     }
   }, [isConfirming, isConfirmed, error]);
 

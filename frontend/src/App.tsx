@@ -1,25 +1,35 @@
-import { ConnectWallet } from './components/ConnectWallet';
-import { CreateRedPacket } from './components/CreateRedPacket';
-import { Toaster } from 'react-hot-toast';
+import { ConnectWallet } from "./components/ConnectWallet";
+import { CreateRedPacket } from "./components/CreateRedPacket";
+import { RedPacketList } from "./components/RedPacketList";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
-    <div>
-      {/* 通知组件，放在顶层 */}
+    <div style={{ maxWidth: "800px", margin: "0 auto" }}>
       <Toaster />
 
-      <header style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header
+        style={{
+          padding: "20px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <h1>链上红包 DApp</h1>
         <ConnectWallet />
       </header>
-      
-      <main style={{ padding: '20px' }}>
-        <CreateRedPacket />
-        {/* 红包列表将显示在这里 */}
-        <hr style={{ margin: '20px 0' }} />
+
+      <main style={{ padding: "20px", display: "flex", gap: "40px" }}>
+        <div style={{ flex: 1 }}>
+          <CreateRedPacket />
+        </div>
+        <div style={{ flex: 2 }}>
+          <RedPacketList />
+        </div>
       </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -29,12 +29,14 @@ contract RedPacketSystem {
     mapping(uint256 => mapping(address => bool)) public hasClaimed;
 
     // --- Events ---
+    // v-- 修改点 1: 在事件定义的末尾，增加了 bool isEven --v
     event PacketCreated(
         uint256 indexed packetId,
         address indexed creator,
         string message,
         uint256 totalAmount,
-        uint256 totalCount
+        uint256 totalCount,
+        bool isEven
     );
     event PacketClaimed(
         uint256 indexed packetId,
@@ -79,7 +81,15 @@ contract RedPacketSystem {
             creationTime: block.timestamp
         });
 
-        emit PacketCreated(packetId, msg.sender, _message, msg.value, _count);
+        // v-- 修改点 2: 在 emit 语句的末尾，增加了 _isEven --v
+        emit PacketCreated(
+            packetId,
+            msg.sender,
+            _message,
+            msg.value,
+            _count,
+            _isEven
+        );
     }
 
     /**
