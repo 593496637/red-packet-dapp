@@ -18,6 +18,7 @@ interface RedPacket {
   message: string;
   totalAmount: string;
   totalCount: string;
+  creationTime: string;
   claims: Claim[];
 }
 
@@ -29,6 +30,12 @@ interface RedPacketCardProps {
 export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
   const { address, isConnected } = useAccount();
   const { writeContract, isPending, isConfirming, isConfirmed } = useContractTransaction("claim");
+  const { 
+    writeContract: withdrawContract, 
+    isPending: isWithdrawPending, 
+    isConfirming: isWithdrawConfirming,
+    isConfirmed: isWithdrawConfirmed 
+  } = useContractTransaction("withdraw");
 
   // 计算状态
   const claimedCount = packet.claims.length;
@@ -38,16 +45,24 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
     (claim) => claim.claimer.toLowerCase() === address?.toLowerCase()
   );
   const canClaim = isConnected && address && !isFullyClaimed && !isClaimedByUser;
+  
+  // 提取功能相关状态
+  const isOwner = address?.toLowerCase() === packet.owner.toLowerCase();
+  const creationTime = Number(packet.creationTime) * 1000; // 转换为毫秒
+  const now = Date.now();
+  const timeElapsed = now - creationTime;
+  const canWithdraw = isOwner && !isFullyClaimed && timeElapsed >= 24 * 60 * 60 * 1000; // 24小时
+  const hasUnclaimedFunds = claimedCount < totalCount;
 
   // 计算剩余金额
   const totalAmount = BigInt(packet.totalAmount);
 
   // 监听交易确认，成功后刷新列表
   useEffect(() => {
-    if (isConfirmed && onClaimSuccess) {
+    if ((isConfirmed || isWithdrawConfirmed) && onClaimSuccess) {
       onClaimSuccess();
     }
-  }, [isConfirmed, onClaimSuccess]);
+  }, [isConfirmed, isWithdrawConfirmed, onClaimSuccess]);
 
   const handleClaim = () => {
     if (!isConnected) {
@@ -61,6 +76,38 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
       functionName: "claimRedPacket",
       args: [BigInt(packet.packetId)],
     });
+  };
+
+  const handleWithdraw = () => {
+    if (!isConnected) {
+      toast.error("请先连接钱包");
+      return;
+    }
+    if (!canWithdraw) {
+      toast.error("提取条件不满足");
+      return;
+    }
+    withdrawContract({
+      address: contractAddress,
+      abi: contractAbi,
+      functionName: "withdraw",
+      args: [BigInt(packet.packetId)],
+    });
+  };
+
+  // 计算剩余时间
+  const getTimeRemaining = () => {
+    const remainingTime = 24 * 60 * 60 * 1000 - timeElapsed;
+    if (remainingTime <= 0) return "已过期";
+    
+    const hours = Math.floor(remainingTime / (60 * 60 * 1000));
+    const minutes = Math.floor((remainingTime % (60 * 60 * 1000)) / (60 * 1000));
+    
+    if (hours > 0) {
+      return `${hours}小时${minutes}分钟后可提取`;
+    } else {
+      return `${minutes}分钟后可提取`;
+    }
   };
 
   return (
@@ -170,8 +217,24 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
           </details>
         </div>
 
+        {/* 创建者提取信息 */}
+        {isOwner && hasUnclaimedFunds && (
+          <div className="mb-4">
+            <div className="bg-blue-50/80 backdrop-blur-sm rounded-xl p-3 border border-blue-200/50">
+              <div className="text-blue-800 text-xs font-medium mb-1">🏦 创建者权限</div>
+              <div className="text-blue-700 text-xs">
+                {canWithdraw ? (
+                  "✅ 24小时已过，可提取剩余资金"
+                ) : (
+                  `⏰ ${getTimeRemaining()}`
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 操作按钮 */}
-        <div>
+        <div className="space-y-2">
           {!address ? (
             <button
               disabled
@@ -185,6 +248,29 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
               className="w-full py-4 text-gray-500 bg-gray-300/50 backdrop-blur-sm rounded-2xl text-sm cursor-not-allowed border border-gray-300/30"
             >
               🎉 红包已抢完
+            </button>
+          ) : isOwner && canWithdraw ? (
+            // 创建者提取按钮
+            <button
+              onClick={handleWithdraw}
+              disabled={isWithdrawPending || isWithdrawConfirming}
+              className={`w-full py-4 text-sm font-semibold rounded-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] ${
+                isWithdrawPending || isWithdrawConfirming
+                  ? "text-gray-500 bg-gray-300/50 cursor-not-allowed border border-gray-300/30"
+                  : "text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl border border-blue-300/50"
+              }`}
+            >
+              {isWithdrawPending || isWithdrawConfirming ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                  {isWithdrawPending ? "等待确认..." : "提取中..."}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2">
+                  <span>🏦</span>
+                  <span>提取剩余资金</span>
+                </div>
+              )}
             </button>
           ) : isClaimedByUser ? (
             <div className="space-y-3">

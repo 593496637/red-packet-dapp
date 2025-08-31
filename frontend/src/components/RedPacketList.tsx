@@ -14,6 +14,7 @@ interface RedPacket {
   message: string;
   totalAmount: string;
   totalCount: string;
+  creationTime: string;
   claims: Claim[];
 }
 
@@ -31,6 +32,7 @@ const GET_RED_PACKETS = gql`
       message
       totalAmount
       totalCount
+      creationTime
       # 直接在查询中获取关联的 claims 列表
       claims {
         claimer
@@ -41,11 +43,14 @@ const GET_RED_PACKETS = gql`
 `;
 
 export function RedPacketList() {
-  // 移除自动轮询，改为手动刷新
+  // 禁用持续轮询，但允许必要的刷新
   const { loading, error, data, refetch } = useQuery<RedPacketData>(
     GET_RED_PACKETS,
     {
-      notifyOnNetworkStatusChange: true, // 确保网络状态变化时更新loading状态
+      fetchPolicy: 'cache-first', // 优先使用缓存
+      errorPolicy: 'all',
+      pollInterval: 0, // 关键：禁用自动轮询
+      notifyOnNetworkStatusChange: true, // 允许必要的网络状态更新
     }
   );
 

@@ -20,6 +20,19 @@ const subgraphUri =
 const apolloClient = new ApolloClient({
   uri: subgraphUri,
   cache: new InMemoryCache(),
+  defaultOptions: {
+    query: {
+      fetchPolicy: 'cache-first', // 优先使用缓存，减少请求
+      errorPolicy: 'all',
+      notifyOnNetworkStatusChange: true, // 允许网络状态通知
+    },
+    watchQuery: {
+      fetchPolicy: 'cache-and-network', // watchQuery 可以使用 cache-and-network
+      errorPolicy: 'all',
+      pollInterval: 0, // 禁用自动轮询 - 关键！
+      notifyOnNetworkStatusChange: true, // 允许网络状态通知
+    },
+  },
 });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
