@@ -1,9 +1,5 @@
 import { useQuery, gql } from "@apollo/client";
-import { useAccount } from "wagmi";
-import { contractAddress, contractAbi } from "../contracts/RedPacketSystem";
-import { formatEther } from "viem";
-import { useEffect } from "react";
-import { useContractTransaction } from "../hooks/useContractTransaction";
+import { RedPacketCard } from "./RedPacketCard";
 
 // TypeScript interfaces
 interface Claim {
@@ -45,87 +41,111 @@ const GET_RED_PACKETS = gql`
 `;
 
 export function RedPacketList() {
-  const { address } = useAccount();
-  // useQuery 现在会每 5 秒自动重新查询一次数据
-  const { loading, error, data, startPolling, stopPolling } = useQuery<RedPacketData>(
+  // 移除自动轮询，改为手动刷新
+  const { loading, error, data, refetch } = useQuery<RedPacketData>(
     GET_RED_PACKETS,
     {
-      pollInterval: 5000,
+      notifyOnNetworkStatusChange: true, // 确保网络状态变化时更新loading状态
     }
   );
 
-  // 组件加载时开始轮询，卸载时停止
-  useEffect(() => {
-    startPolling(5000);
-    return () => stopPolling();
-  }, [startPolling, stopPolling]);
-
-  const { writeContract, isPending, isConfirming } = useContractTransaction("claim");
-
-  const handleClaim = (packetId: string) => {
-    writeContract({
-      address: contractAddress,
-      abi: contractAbi,
-      functionName: "claimRedPacket",
-      args: [BigInt(packetId)],
-    });
+  // 手动刷新函数
+  const handleRefresh = () => {
+    refetch();
   };
 
-  if (loading && !data) return <p>加载红包列表中...</p>; // 初始加载时显示
-  if (error) return <p>加载数据出错: {error.message}</p>;
+  if (loading && !data) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">加载红包列表中...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-500 mb-4">
+          ❌ 加载数据出错
+        </div>
+        <p className="text-gray-600 mb-4">{error.message}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+        >
+          重试
+        </button>
+      </div>
+    );
+  }
+
+  const packets = data?.redPackets || [];
 
   return (
     <div>
-      <h3>红包广场 {loading && "(正在更新...)"}</h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-        {data?.redPackets.map((packet: RedPacket) => {
-          // 2. 数据处理逻辑变得极其简单
-          const claimedCount = packet.claims.length;
-          const isClaimedByUser = packet.claims.some(
-            (claim: Claim) =>
-              claim.claimer.toLowerCase() === address?.toLowerCase()
-          );
-
-          return (
-            <div
-              key={packet.id}
-              style={{
-                border: "1px solid #ccc",
-                padding: "10px",
-                borderRadius: "5px",
-              }}
-            >
-              <p>
-                <strong>祝福语:</strong> {packet.message}
-              </p>
-              <p>
-                <strong>来自:</strong> {packet.owner}
-              </p>
-              <p>
-                <strong>总金额:</strong>{" "}
-                {formatEther(BigInt(packet.totalAmount))} ETH
-              </p>
-              <p>
-                <strong>状态:</strong> {claimedCount} / {packet.totalCount}{" "}
-                份已被领取
-              </p>
-
-              {claimedCount >= Number(packet.totalCount) ? (
-                <button disabled>已抢完</button>
-              ) : isClaimedByUser ? (
-                <button disabled>你已抢过</button>
-              ) : (
-                <button
-                  onClick={() => handleClaim(packet.packetId)}
-                  disabled={!address || isPending || isConfirming}
-                >
-                  {isPending || isConfirming ? "处理中..." : "抢！"}
-                </button>
-              )}
-            </div>
-          );
-        })}
+      {/* 微信风格头部 */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex-1">
+          <div className="wechat-text-primary text-base font-medium mb-1">
+            红包列表
+          </div>
+          <div className="wechat-text-secondary text-sm">
+            {packets.length} 个红包
+          </div>
+        </div>
+        
+        {/* 手动刷新按钮 */}
+        <button
+          onClick={handleRefresh}
+          disabled={loading}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            loading 
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+          }`}
+        >
+          <svg 
+            className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
+            />
+          </svg>
+          {loading ? '刷新中' : '刷新'}
+        </button>
       </div>
+
+      {/* 红包列表 */}
+      {packets.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-5xl mb-4">🧧</div>
+          <div className="wechat-text-primary text-lg font-medium mb-2">
+            还没有红包
+          </div>
+          <div className="wechat-text-secondary text-sm">
+            快来发第一个红包吧！
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {packets.map((packet: RedPacket) => (
+            <RedPacketCard 
+              key={packet.id} 
+              packet={packet} 
+              onClaimSuccess={() => refetch()} 
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

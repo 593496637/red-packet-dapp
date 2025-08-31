@@ -1,0 +1,367 @@
+@import "tailwindcss";
+
+/* 微信风格CSS变量系统 */
+:root {
+  /* 微信字体系统 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Arial', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  
+  /* 微信色彩主题 */
+  color-scheme: light;
+  color: #333333;
+  background-color: #F7F7F7;
+
+  /* 微信红包CSS变量 */
+  --wechat-red-primary: #FA5151;
+  --wechat-red-secondary: #E93F3F;
+  --wechat-gold: #FFD700;
+  --wechat-bg: #F7F7F7;
+  --wechat-bg-light: #FAFAFA;
+  --wechat-card-bg: #FFFFFF;
+  --wechat-text-primary: #333333;
+  --wechat-text-secondary: #666666;
+  --wechat-text-light: #999999;
+  --wechat-border: #EEEEEE;
+  
+  /* 微信红包渐变 */
+  --wechat-red-gradient: linear-gradient(135deg, #FA5151 0%, #E93F3F 100%);
+  --wechat-gold-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  
+  /* 微信阴影 */
+  --wechat-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --wechat-shadow-card: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --wechat-shadow-red: 0 4px 12px rgba(250, 81, 81, 0.3);
+  
+  /* 微信圆角 */
+  --wechat-radius: 8px;
+  --wechat-radius-card: 12px;
+  --wechat-radius-button: 6px;
+
+  /* 字体渲染优化 */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* 微信风格页面布局 */
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--wechat-bg);
+  position: relative;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  max-width: 1200px; /* PC屏幕宽度 */
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: var(--wechat-bg);
+  position: relative;
+  padding: 0 20px;
+}
+
+/* 改进的响应式布局 - 已整合到下方的媒体查询中 */
+
+/* 微信风格卡片 */
+.wechat-card {
+  background: var(--wechat-card-bg);
+  border-radius: var(--wechat-radius-card);
+  box-shadow: var(--wechat-shadow-card);
+  border: 1px solid var(--wechat-border);
+}
+
+.wechat-card-padding {
+  padding: 16px;
+}
+
+/* 微信红包样式 */
+.wechat-red-packet {
+  background: var(--wechat-red-gradient);
+  box-shadow: var(--wechat-shadow-red);
+  border-radius: var(--wechat-radius-card);
+}
+
+.wechat-gold {
+  background: var(--wechat-gold-gradient);
+}
+
+/* 微信按钮样式 */
+.wechat-button {
+  border-radius: var(--wechat-radius-button);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: var(--wechat-shadow);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.wechat-button:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.wechat-button-primary {
+  background: var(--wechat-red-primary);
+  color: white;
+  border: none;
+}
+
+.wechat-button-primary:hover {
+  background: var(--wechat-red-secondary);
+}
+
+.wechat-button-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(250, 81, 81, 0.3);
+}
+
+/* 微信风格动画系统 */
+@keyframes wechat-bounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(-5px);
+  }
+  70% {
+    transform: scale(0.95) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes wechat-fade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes wechat-scale {
+  0% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes wechat-slide {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+.wechat-bounce {
+  animation: wechat-bounce 0.6s ease-out;
+}
+
+.wechat-fade {
+  animation: wechat-fade 0.3s ease-out;
+}
+
+.wechat-scale {
+  animation: wechat-scale 0.2s ease-out;
+}
+
+.wechat-slide {
+  animation: wechat-slide 0.3s ease-out;
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* 微信红包卡片效果 */
+.wechat-red-packet-card {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.wechat-red-packet-card:active {
+  transform: scale(0.98);
+}
+
+.wechat-red-packet-card.claimed {
+  opacity: 0.7;
+  filter: grayscale(30%);
+}
+
+/* 微信加载效果 */
+.wechat-loading {
+  background: linear-gradient(90deg, 
+    #f3f4f6 25%, 
+    #e5e7eb 50%, 
+    #f3f4f6 75%
+  );
+  background-size: 200% 100%;
+  animation: wechat-shimmer 1.5s infinite;
+}
+
+@keyframes wechat-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* 微信文字样式 */
+.wechat-text-primary {
+  color: var(--wechat-text-primary);
+}
+
+.wechat-text-secondary {
+  color: var(--wechat-text-secondary);
+}
+
+.wechat-text-light {
+  color: var(--wechat-text-light);
+}
+
+/* 微信红包装饰效果 */
+.wechat-red-packet::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  animation: wechat-glow 3s ease-in-out infinite;
+  pointer-events: none; /* 确保伪元素不会阻挡点击事件 */
+}
+
+@keyframes wechat-glow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+/* PC版微信风格响应式设计 */
+@media (max-width: 1200px) {
+  #root {
+    max-width: 100%;
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  #root {
+    padding: 0 12px;
+  }
+  
+  .wechat-card-padding {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  #root {
+    padding: 0 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  #root {
+    padding: 0 8px;
+  }
+  
+  .wechat-card-padding {
+    padding: 8px;
+  }
+}
+
+/* 微信暗色主题（微信很少使用暗色，但保留基本支持） */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wechat-bg: #1A1A1A;
+    --wechat-card-bg: #2C2C2C;
+    --wechat-text-primary: #FFFFFF;
+    --wechat-text-secondary: #CCCCCC;
+    --wechat-text-light: #999999;
+    --wechat-border: #444444;
+  }
+}
+
+/* 自定义滚动条样式 */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
+/* 玻璃态效果支持 */
+@supports (backdrop-filter: blur(20px)) {
+  .backdrop-blur-xl {
+    backdrop-filter: blur(20px);
+  }
+  
+  .backdrop-blur-md {
+    backdrop-filter: blur(12px);
+  }
+  
+  .backdrop-blur-sm {
+    backdrop-filter: blur(4px);
+  }
+}
+
+/* 减少动画（可访问性） */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .wechat-red-packet::before {
+    animation: none;
+  }
+}

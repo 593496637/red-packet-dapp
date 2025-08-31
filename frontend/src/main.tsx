@@ -15,7 +15,7 @@ const queryClient = new QueryClient();
 
 // 使用你自己的 Subgraph Query URL  
 const subgraphUri =
-  "https://api.studio.thegraph.com/query/119458/red-packet-dapp/version/latest";
+  "https://api.studio.thegraph.com/query/119458/redpacketsystem/version/latest";
 
 const apolloClient = new ApolloClient({
   uri: subgraphUri,
