@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a full-stack decentralized red packet (hongbao) system built on Ethereum. It allows users to create and distribute ETH red packets with random or even distribution modes. The system includes:
 
-- **Smart Contract**: `RedPacketSystem.sol` deployed on Sepolia testnet at `0x4e659F1DB6E5475800A6E8d12F0f6dd25c65960f`
+- **Smart Contract**: `RedPacketSystem.sol` deployed on Sepolia testnet at `0x9986ec8e9D4d0724e7CD9320eD703a3CD69389C1`
 - **Frontend**: React + TypeScript + Vite application with Web3 integration
 - **Subgraph**: The Graph protocol indexer for efficient blockchain data querying
 
@@ -70,7 +70,7 @@ npm run test       # Run subgraph tests
 
 The project supports **multiple networks** but contracts are deployed on **Sepolia testnet**:
 - **Primary Network**: Sepolia Testnet (推荐)
-- Contract address: `0x4e659F1DB6E5475800A6E8d12F0f6dd25c65960f`
+- Contract address: `0x9986ec8e9D4d0724e7CD9320eD703a3CD69389C1`
 - Subgraph deployed on The Graph network for Sepolia
 
 ### Supported Networks

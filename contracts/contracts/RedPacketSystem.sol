@@ -168,14 +168,14 @@ contract RedPacketSystem {
     }
 
     /**
-     * @dev 创建者在24小时后取回剩余金额
+     * @dev 创建者在5分钟后取回剩余金额
      * @param _packetId 红包ID
      */
     function withdraw(uint256 _packetId) external {
         RedPacket storage packet = packets[_packetId];
         require(msg.sender == packet.owner, "RedPacket: Not owner");
         require(
-            block.timestamp > packet.creationTime + 24 hours,
+            block.timestamp > packet.creationTime + 5 minutes,
             "RedPacket: Not expired yet"
         );
         require(packet.balance > 0, "RedPacket: No balance to withdraw");

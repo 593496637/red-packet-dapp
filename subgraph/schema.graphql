@@ -9,6 +9,8 @@ type RedPacket @entity(immutable: true) {
   creationTime: BigInt!
   # v-- 新增字段：通过 Claim 实体的 redPacket 字段反向派生出一个列表 --v
   claims: [Claim!]! @derivedFrom(field: "redPacket")
+  # v-- 新增字段：通过 Withdrawal 实体的 redPacket 字段反向派生出一个列表 --v
+  withdrawals: [Withdrawal!]! @derivedFrom(field: "redPacket")
 }
 
 type Claim @entity(immutable: true) {
@@ -18,5 +20,15 @@ type Claim @entity(immutable: true) {
   amount: BigInt!
   timestamp: BigInt!
   # v-- 新增字段：直接链接到它所属的 RedPacket 实体 --v
+  redPacket: RedPacket!
+}
+
+type Withdrawal @entity(immutable: true) {
+  id: ID!
+  packetId: BigInt!
+  owner: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+  # v-- 链接到它所属的 RedPacket 实体 --v
   redPacket: RedPacket!
 }

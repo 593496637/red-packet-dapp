@@ -46,24 +46,27 @@
   -webkit-text-size-adjust: 100%;
 }
 
-/* 微信风格页面布局 */
+/* 微信风格页面布局 - 稳定版本 */
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
+  height: 100vh; /* 固定视口高度 */
   background-color: var(--wechat-bg);
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden; /* 防止body滚动 */
 }
 
 #root {
   width: 100%;
-  max-width: 1200px; /* PC屏幕宽度 */
+  max-width: 1200px;
   margin: 0 auto;
-  min-height: 100vh;
+  height: 100vh; /* 固定高度 */
   background-color: var(--wechat-bg);
   position: relative;
   padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* 改进的响应式布局 - 已整合到下方的媒体查询中 */
@@ -315,6 +318,37 @@ body {
   }
 }
 
+/* 稳定的滚动条样式 */
+html {
+  overflow: hidden; /* 防止html滚动 */
+}
+
+/* 应用级别滚动容器 */
+.app-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.app-scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.app-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 10px;
+}
+
+.app-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
 /* 自定义滚动条样式 */
 .custom-scrollbar {
   scrollbar-width: thin;
@@ -351,6 +385,14 @@ body {
   .backdrop-blur-sm {
     backdrop-filter: blur(4px);
   }
+}
+
+/* 文本截断工具类 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* 减少动画（可访问性） */

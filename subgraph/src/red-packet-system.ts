@@ -1,8 +1,9 @@
 import {
   PacketCreated as PacketCreatedEvent,
   PacketClaimed as PacketClaimedEvent,
+  FundsWithdrawn as FundsWithdrawnEvent,
 } from "../generated/RedPacketSystem/RedPacketSystem";
-import { RedPacket, Claim } from "../generated/schema";
+import { RedPacket, Claim, Withdrawal } from "../generated/schema";
 
 /**
  * 处理 PacketCreated 事件。
@@ -42,5 +43,26 @@ export function handlePacketClaimed(event: PacketClaimedEvent): void {
   entity.redPacket = event.params.packetId.toString()
 
   // 保存这个新的领取记录。
+  entity.save();
+}
+
+/**
+ * 处理 FundsWithdrawn 事件。
+ * 当红包创建者提取剩余资金时，这个函数会被调用。
+ */
+export function handleFundsWithdrawn(event: FundsWithdrawnEvent): void {
+  // 创建一个新的 Withdrawal 实体。
+  let entity = new Withdrawal(
+    event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+  );
+
+  // 填充 Withdrawal 实体的字段。
+  entity.packetId = event.params.packetId;
+  entity.owner = event.params.owner;
+  entity.amount = event.params.amount;
+  entity.timestamp = event.block.timestamp;
+  entity.redPacket = event.params.packetId.toString();
+
+  // 保存这个新的提取记录。
   entity.save();
 }

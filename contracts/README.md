@@ -16,7 +16,7 @@
 
 ### 当前部署信息
 - **网络**: Sepolia 测试网
-- **合约地址**: `0x4e659F1DB6E5475800A6E8d12F0f6dd25c65960f`
+- **合约地址**: `0x9986ec8e9D4d0724e7CD9320eD703a3CD69389C1`
 - **验证状态**: 已在 Etherscan 验证
 - **部署区块**: 9093069
 
@@ -207,7 +207,7 @@ const publicClient = createPublicClient({
 
 // 创建红包
 const hash = await walletClient.writeContract({
-  address: '0x4e659F1DB6E5475800A6E8d12F0f6dd25c65960f',
+  address: '0x9986ec8e9D4d0724e7CD9320eD703a3CD69389C1',
   abi: RedPacketSystemABI,
   functionName: 'createRedPacket',
   args: ['新年快乐!', 10n, false],

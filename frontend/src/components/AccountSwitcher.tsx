@@ -35,39 +35,41 @@ export function AccountSwitcher({ className = "", showBalance = true }: AccountS
     if (previousAddress.current && address && previousAddress.current !== address && isConnected) {
       console.log(`账户从 ${previousAddress.current} 切换到 ${address}`);
       
-      // 延迟300ms后刷新数据，确保钱包状态稳定
+      // 延迟600ms后刷新数据，确保钱包状态稳定
       const timer = setTimeout(() => {
         refetchENS();
         refetchBalance();
-        // 注意：不显示账户切换Toast，因为网络切换会触发网络Toast
-        // 这避免了网络切换时同时显示两个Toast的问题
-      }, 300);
+      }, 600);
 
       // 更新previous address
       previousAddress.current = address;
       
       return () => clearTimeout(timer);
     } else if (address && !previousAddress.current && isConnected) {
-      // 首次连接钱包时也需要刷新ENS数据
+      // 首次连接钱包时只需要等待组件自身的数据获取，不需要手动refetch
       console.log(`首次连接钱包: ${address}`);
-      const timer = setTimeout(() => {
-        refetchENS();
-        refetchBalance();
-      }, 300);
       previousAddress.current = address;
-      return () => clearTimeout(timer);
     } else {
       // 更新previous address
       previousAddress.current = address;
     }
   }, [address, isConnected, refetchENS, refetchBalance]);
 
-  // 注册ENS刷新函数到全局上下文，以便网络切换时调用
+  // 注册ENS刷新函数到全局上下文，使用防抖避免频繁调用
   useEffect(() => {
+    let debounceTimer: NodeJS.Timeout;
+    
     ensRefreshContext.registerRefreshFunction(() => {
-      refetchENS();
-      refetchBalance();
+      // 清除之前的定时器
+      clearTimeout(debounceTimer);
+      // 设置新的定时器，延迟执行
+      debounceTimer = setTimeout(() => {
+        refetchENS();
+        refetchBalance();
+      }, 500);
     });
+
+    return () => clearTimeout(debounceTimer);
   }, [refetchENS, refetchBalance, ensRefreshContext]);
 
   // 格式化地址显示
@@ -91,7 +93,7 @@ export function AccountSwitcher({ className = "", showBalance = true }: AccountS
           refetchBalance();
           // 手动账户切换时显示Toast
           toast.success("账户已切换，正在更新信息...", { duration: 2000 });
-        }, 1000);
+        }, 1200);
       }).catch((error: Error) => {
         console.error('账户切换失败:', error);
         toast.error('账户切换失败，请重试');

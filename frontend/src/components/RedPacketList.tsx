@@ -50,7 +50,9 @@ export function RedPacketList() {
       fetchPolicy: 'cache-first', // 优先使用缓存
       errorPolicy: 'all',
       pollInterval: 0, // 关键：禁用自动轮询
-      notifyOnNetworkStatusChange: true, // 允许必要的网络状态更新
+      notifyOnNetworkStatusChange: false, // 禁用网络状态更新减少请求
+      // 增加缓存时间，减少重复请求
+      nextFetchPolicy: 'cache-first',
     }
   );
 
@@ -129,7 +131,7 @@ export function RedPacketList() {
         </button>
       </div>
 
-      {/* 红包列表 */}
+      {/* 红包列表 - 固定高度网格 */}
       {packets.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-5xl mb-4">🧧</div>
@@ -141,7 +143,7 @@ export function RedPacketList() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
           {packets.map((packet: RedPacket) => (
             <RedPacketCard 
               key={packet.id} 

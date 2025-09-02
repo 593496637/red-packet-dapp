@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-a17736826345f9525ac8e88c3e51bacaa50e447c",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/RedPacketSystem.sol": "project/contracts/RedPacketSystem.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/RedPacketSystem.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.19;\r\n\r\n/**\r\n * @title 红包系统合约\r\n * @dev 一个支持多用户创建多个随机或均分红包的工厂合约。\r\n * @notice 增加了事件，优化了资金分配逻辑，并支持超时后提现。\r\n */\r\ncontract RedPacketSystem {\r\n    // 红包结构体\r\n    struct RedPacket {\r\n        address owner; // 创建者\r\n        string message; // 祝福语\r\n        uint256 totalAmount; // 总金额\r\n        uint256 balance; // 剩余金额\r\n        uint256 totalCount; // 总份数\r\n        uint256 claimedCount; // 已领取份数\r\n        bool isEven; // 是否均分\r\n        uint256 creationTime; // 创建时间\r\n    }\r\n\r\n    // 红包ID计数器\r\n    uint256 public packetCounter;\r\n\r\n    // 存储所有红包: packetId => RedPacket\r\n    mapping(uint256 => RedPacket) public packets;\r\n\r\n    // 记录谁抢了哪个红包: packetId => userAddress => bool\r\n    mapping(uint256 => mapping(address => bool)) public hasClaimed;\r\n\r\n    // --- Events ---\r\n    // v-- 修改点 1: 在事件定义的末尾，增加了 bool isEven --v\r\n    event PacketCreated(\r\n        uint256 indexed packetId,\r\n        address indexed creator,\r\n        string message,\r\n        uint256 totalAmount,\r\n        uint256 totalCount,\r\n        bool isEven\r\n    );\r\n    event PacketClaimed(\r\n        uint256 indexed packetId,\r\n        address indexed claimer,\r\n        uint256 amount\r\n    );\r\n    event PacketEmpty(uint256 indexed packetId);\r\n    event AlreadyClaimed(uint256 indexed packetId, address indexed claimer);\r\n    event FundsWithdrawn(\r\n        uint256 indexed packetId,\r\n        address indexed owner,\r\n        uint256 amount\r\n    );\r\n\r\n    /**\r\n     * @dev 创建一个新红包\r\n     * @param _message 祝福语\r\n     * @param _count 红包数量\r\n     * @param _isEven 是否均分\r\n     */\r\n    function createRedPacket(\r\n        string memory _message,\r\n        uint256 _count,\r\n        bool _isEven\r\n    ) external payable {\r\n        require(msg.value > 0, \"RedPacket: Must send ETH to create\");\r\n        require(_count > 0, \"RedPacket: Count must be greater than 0\");\r\n        require(\r\n            msg.value >= _count,\r\n            \"RedPacket: Amount must be at least 1 wei per packet\"\r\n        );\r\n\r\n        uint256 packetId = ++packetCounter;\r\n        packets[packetId] = RedPacket({\r\n            owner: msg.sender,\r\n            message: _message,\r\n            totalAmount: msg.value,\r\n            balance: msg.value,\r\n            totalCount: _count,\r\n            claimedCount: 0,\r\n            isEven: _isEven,\r\n            creationTime: block.timestamp\r\n        });\r\n\r\n        // v-- 修改点 2: 在 emit 语句的末尾，增加了 _isEven --v\r\n        emit PacketCreated(\r\n            packetId,\r\n            msg.sender,\r\n            _message,\r\n            msg.value,\r\n            _count,\r\n            _isEven\r\n        );\r\n    }\r\n\r\n    /**\r\n     * @dev 抢红包\r\n     * @param _packetId 红包的ID\r\n     */\r\n    function claimRedPacket(uint256 _packetId) external {\r\n        RedPacket storage packet = packets[_packetId];\r\n\r\n        // 基础检查\r\n        require(packet.owner != address(0), \"RedPacket: Not exist\");\r\n        require(\r\n            packet.claimedCount < packet.totalCount,\r\n            \"RedPacket: No packets left\"\r\n        );\r\n        if (hasClaimed[_packetId][msg.sender]) {\r\n            emit AlreadyClaimed(_packetId, msg.sender);\r\n            return; // 使用 return 而不是 require 来触发事件，对前端更友好\r\n        }\r\n\r\n        hasClaimed[_packetId][msg.sender] = true;\r\n        packet.claimedCount++;\r\n\r\n        uint256 amount;\r\n        if (packet.claimedCount == packet.totalCount) {\r\n            // 最后一个人，获得所有剩余金额\r\n            amount = packet.balance;\r\n        } else {\r\n            if (packet.isEven) {\r\n                // 均分模式\r\n                amount = packet.totalAmount / packet.totalCount;\r\n            } else {\r\n                // 随机模式\r\n                amount = _getRandomAmount(\r\n                    packet.balance,\r\n                    packet.totalCount - packet.claimedCount + 1\r\n                );\r\n            }\r\n        }\r\n\r\n        if (amount > packet.balance) {\r\n            amount = packet.balance;\r\n        }\r\n\r\n        packet.balance -= amount;\r\n\r\n        (bool success, ) = msg.sender.call{value: amount}(\"\");\r\n        require(success, \"RedPacket: Transfer failed\");\r\n\r\n        emit PacketClaimed(_packetId, msg.sender, amount);\r\n\r\n        if (packet.claimedCount == packet.totalCount) {\r\n            emit PacketEmpty(_packetId);\r\n        }\r\n    }\r\n\r\n    /**\r\n     * @dev 生成随机金额 (内部函数)\r\n     */\r\n    function _getRandomAmount(\r\n        uint256 _balance,\r\n        uint256 _remainingCount\r\n    ) private view returns (uint256) {\r\n        if (_remainingCount == 0) return 0;\r\n        uint256 avg = _balance / _remainingCount;\r\n        uint256 seed = uint256(\r\n            keccak256(abi.encodePacked(block.timestamp, msg.sender, _balance))\r\n        );\r\n        uint256 random = (seed % (avg * 2)) + 1;\r\n\r\n        uint256 maxAmount = _balance - (_remainingCount - 1); // 至少为后面的人留 1 wei\r\n        if (random > maxAmount) {\r\n            random = maxAmount;\r\n        }\r\n        return random;\r\n    }\r\n\r\n    /**\r\n     * @dev 创建者在5分钟后取回剩余金额\r\n     * @param _packetId 红包ID\r\n     */\r\n    function withdraw(uint256 _packetId) external {\r\n        RedPacket storage packet = packets[_packetId];\r\n        require(msg.sender == packet.owner, \"RedPacket: Not owner\");\r\n        require(\r\n            block.timestamp > packet.creationTime + 5 minutes,\r\n            \"RedPacket: Not expired yet\"\r\n        );\r\n        require(packet.balance > 0, \"RedPacket: No balance to withdraw\");\r\n\r\n        uint256 amountToWithdraw = packet.balance;\r\n        packet.balance = 0;\r\n\r\n        (bool success, ) = msg.sender.call{value: amountToWithdraw}(\"\");\r\n        require(success, \"RedPacket: Withdraw failed\");\r\n\r\n        emit FundsWithdrawn(_packetId, msg.sender, amountToWithdraw);\r\n    }\r\n}\r\n"
+      }
+    }
+  }
+}

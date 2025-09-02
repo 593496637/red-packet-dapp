@@ -1,6 +1,6 @@
 // frontend/src/contracts/RedPacketSystem.ts
 
-export const contractAddress = "0x4e659F1DB6E5475800A6E8d12F0f6dd25c65960f"; // <-- 替换成你的地址
+export const contractAddress = "0x9986ec8e9D4d0724e7CD9320eD703a3CD69389C1"; // <-- 替换成你的地址
 
 // 从 Hardhat 项目的 artifacts 文件夹中复制 ABI
 // 路径: red-packet-dapp/contracts/artifacts/contracts/RedPacketSystem.sol/RedPacketSystem.json
@@ -106,6 +106,12 @@ export const contractAbi = [
         internalType: "uint256",
         name: "totalCount",
         type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "bool",
+        name: "isEven",
+        type: "bool",
       },
     ],
     name: "PacketCreated",

@@ -44,27 +44,28 @@ function App() {
 
   return (
     <ENSRefreshContext.Provider value={ensRefreshContext}>
-      <div className="min-h-screen" style={{ backgroundColor: 'var(--wechat-bg)' }}>
-        {/* 微信风格Toast通知 */}
-        <Toaster 
-          position="top-center"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: '#333333',
-              color: '#FFFFFF',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '400',
-              padding: '12px 16px',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-              border: 'none',
-            }
-          }}
-        />
+      {/* 微信风格Toast通知 */}
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#333333',
+            color: '#FFFFFF',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '400',
+            padding: '12px 16px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            border: 'none',
+          }
+        }}
+      />
 
-        {/* 微信风格Header */}
-        <header className="wechat-card border-0 border-b border-wechat-border-light mt-4 sm:mt-6">
+      {/* 固定布局容器 */}
+      <div className="h-full flex flex-col" style={{ backgroundColor: 'var(--wechat-bg)' }}>
+        {/* 微信风格Header - 固定高度 */}
+        <header className="wechat-card border-0 border-b border-wechat-border-light flex-shrink-0">
           <div className="wechat-card-padding">
             <div className="flex items-center justify-between">
               {/* 微信风格标题 */}
@@ -83,41 +84,43 @@ function App() {
           </div>
         </header>
 
-        {/* 微信风格主要内容区 */}
-        <main className="wechat-card-padding">
-          {/* 发红包按钮区域 */}
-          <div className="mb-4">
-            {isConnected ? (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="w-full wechat-button wechat-button-primary py-4 px-4 flex items-center justify-center gap-3 text-base"
-              >
-                <span className="text-xl">🧧</span>
-                <span>发红包</span>
-              </button>
-            ) : (
-              <div className="w-full py-4 px-4 bg-gray-100 rounded-lg text-center text-gray-500">
-                <span className="text-xl mr-2">🔒</span>
-                <span>请先连接钱包后发红包</span>
-              </div>
-            )}
+        {/* 可滚动主内容区 */}
+        <main className="app-scroll-container">
+          <div className="wechat-card-padding">
+            {/* 发红包按钮区域 - 固定高度 */}
+            <div className="mb-4 flex-shrink-0">
+              {isConnected ? (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="w-full wechat-button wechat-button-primary py-4 px-4 flex items-center justify-center gap-3 text-base"
+                >
+                  <span className="text-xl">🧧</span>
+                  <span>发红包</span>
+                </button>
+              ) : (
+                <div className="w-full py-4 px-4 bg-gray-100 rounded-lg text-center text-gray-500">
+                  <span className="text-xl mr-2">🔒</span>
+                  <span>请先连接钱包后发红包</span>
+                </div>
+              )}
+            </div>
+
+            {/* 红包列表 */}
+            <RedPacketList />
           </div>
-
-          {/* 红包列表 */}
-          <RedPacketList />
-          
-          {/* 微信风格发红包弹窗 */}
-          <Modal
-            isOpen={showCreateModal}
-            onClose={() => setShowCreateModal(false)}
-            title="发红包"
-            maxWidth="md"
-          >
-            <CreateRedPacket />
-          </Modal>
         </main>
-
       </div>
+      
+      {/* 微信风格发红包弹窗 */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="发红包"
+        maxWidth="md"
+      >
+        <CreateRedPacket />
+      </Modal>
+
     </ENSRefreshContext.Provider>
   );
 }

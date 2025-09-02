@@ -89,7 +89,7 @@ npm run dev
 - **数据索引**: The Graph 协议子图，用于高效的区块链数据查询
 
 ### 部署信息
-- **合约地址**: `0x4e659F1DB6E5475800A6E8d12F0f6dd25c65960f`
+- **合约地址**: `0x9986ec8e9D4d0724e7CD9320eD703a3CD69389C1`
 - **网络**: Sepolia 测试网
 - **子图**: 已部署到 The Graph Studio
 
