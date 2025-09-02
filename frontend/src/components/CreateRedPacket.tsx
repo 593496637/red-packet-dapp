@@ -6,7 +6,11 @@ import { useContractTransaction } from "../hooks/useContractTransaction";
 import { useWalletBalance } from "../hooks/useWalletBalance";
 import toast from "react-hot-toast";
 
-export function CreateRedPacket() {
+interface CreateRedPacketProps {
+  onSuccess?: () => void;
+}
+
+export function CreateRedPacket({ onSuccess }: CreateRedPacketProps) {
   const { isConnected } = useAccount();
   const [message, setMessage] = useState("");
   const [count, setCount] = useState("");
@@ -16,15 +20,19 @@ export function CreateRedPacket() {
   const { writeContract, isPending, isConfirming, isConfirmed } = useContractTransaction("create");
   const { balance, formattedBalance, isLoading: balanceLoading } = useWalletBalance();
 
-  // 表单重置
+  // 表单重置和成功回调
   useEffect(() => {
     if (isConfirmed) {
       setMessage("");
       setCount("");
       setAmount("");
       setIsEven(false);
+      // 调用成功回调
+      if (onSuccess) {
+        onSuccess();
+      }
     }
-  }, [isConfirmed]);
+  }, [isConfirmed, onSuccess]);
 
   // 计算预览
   const estimateInfo = useMemo(() => {

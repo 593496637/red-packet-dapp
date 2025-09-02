@@ -11,6 +11,12 @@ interface Claim {
   amount: string;
 }
 
+interface Withdrawal {
+  owner: string;
+  amount: string;
+  timestamp: string;
+}
+
 interface RedPacket {
   id: string;
   packetId: string;
@@ -20,6 +26,7 @@ interface RedPacket {
   totalCount: string;
   creationTime: string;
   claims: Claim[];
+  withdrawals: Withdrawal[];
 }
 
 interface RedPacketCardProps {
@@ -29,12 +36,13 @@ interface RedPacketCardProps {
 
 export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
   const { address, isConnected } = useAccount();
-  const { writeContract, isPending, isConfirming, isConfirmed } = useContractTransaction("claim");
-  const { 
-    writeContract: withdrawContract, 
-    isPending: isWithdrawPending, 
+  const { writeContract, isPending, isConfirming, isConfirmed } =
+    useContractTransaction("claim");
+  const {
+    writeContract: withdrawContract,
+    isPending: isWithdrawPending,
     isConfirming: isWithdrawConfirming,
-    isConfirmed: isWithdrawConfirmed 
+    isConfirmed: isWithdrawConfirmed,
   } = useContractTransaction("withdraw");
 
   // 计算状态
@@ -44,15 +52,29 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
   const isClaimedByUser = packet.claims.some(
     (claim) => claim.claimer.toLowerCase() === address?.toLowerCase()
   );
-  const canClaim = isConnected && address && !isFullyClaimed && !isClaimedByUser;
-  
+
   // 提取功能相关状态
   const isOwner = address?.toLowerCase() === packet.owner.toLowerCase();
   const creationTime = Number(packet.creationTime) * 1000;
   const now = Date.now();
   const timeElapsed = now - creationTime;
   const hasUnclaimedFunds = claimedCount < totalCount;
-  const canWithdraw = isOwner && hasUnclaimedFunds && timeElapsed >= 5 * 60 * 1000;
+  const hasWithdrawn = packet.withdrawals && packet.withdrawals.length > 0;
+
+  // 抢红包功能相关状态
+  const canClaim =
+    isConnected &&
+    address &&
+    !isFullyClaimed &&
+    !isClaimedByUser &&
+    !hasWithdrawn;
+
+  // 提取剩余资金功能相关状态
+  const canWithdraw =
+    isOwner &&
+    hasUnclaimedFunds &&
+    !hasWithdrawn &&
+    timeElapsed >= 5 * 60 * 1000;
 
   // 计算剩余金额
   const totalAmount = BigInt(packet.totalAmount);
@@ -64,7 +86,7 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
       const timer = setTimeout(() => {
         onClaimSuccess();
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [isConfirmed, isWithdrawConfirmed, onClaimSuccess]);
@@ -88,22 +110,22 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
       toast.error("请先连接钱包");
       return;
     }
-    
+
     if (!isOwner) {
       toast.error("只有创建者可以提取剩余资金");
       return;
     }
-    
+
     if (!hasUnclaimedFunds) {
       toast.error("没有剩余资金可提取");
       return;
     }
-    
+
     if (timeElapsed < 5 * 60 * 1000) {
       toast.error("需要等待5分钟后才能提取剩余资金");
       return;
     }
-    
+
     withdrawContract({
       address: contractAddress,
       abi: contractAbi,
@@ -117,36 +139,36 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
     const date = new Date(creationTime);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    
+
     // 小于1分钟显示"刚刚"
     if (diffMs < 60 * 1000) {
       return "刚刚";
     }
-    
+
     // 小于1小时显示分钟
     if (diffMs < 60 * 60 * 1000) {
       const minutes = Math.floor(diffMs / (60 * 1000));
       return `${minutes}分钟前`;
     }
-    
+
     // 小于24小时显示小时
     if (diffMs < 24 * 60 * 60 * 1000) {
       const hours = Math.floor(diffMs / (60 * 60 * 1000));
       return `${hours}小时前`;
     }
-    
+
     // 小于7天显示天数
     if (diffMs < 7 * 24 * 60 * 60 * 1000) {
       const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
       return `${days}天前`;
     }
-    
+
     // 超过7天显示具体日期
-    return date.toLocaleDateString('zh-CN', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("zh-CN", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -154,10 +176,10 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
   const getTimeRemaining = () => {
     const remainingTime = 5 * 60 * 1000 - timeElapsed;
     if (remainingTime <= 0) return "已过期";
-    
+
     const minutes = Math.floor(remainingTime / (60 * 1000));
     const seconds = Math.floor((remainingTime % (60 * 1000)) / 1000);
-    
+
     if (minutes > 0) {
       return `${minutes}m ${seconds}s后可提取`;
     } else {
@@ -188,14 +210,26 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
       );
     }
 
+    // 如果创建者已经提取了剩余资金，红包结束
+    if (hasWithdrawn) {
+      return (
+        <button
+          disabled
+          className="w-full h-12 text-gray-500 bg-gray-200 rounded-xl text-sm cursor-not-allowed flex items-center justify-center"
+        >
+          🏦 剩余资金已提取
+        </button>
+      );
+    }
+
     // 如果用户已经抢过这个红包，显示已领取状态
     if (isClaimedByUser) {
       const userClaim = packet.claims.find(
-        claim => claim.claimer.toLowerCase() === address?.toLowerCase()
+        (claim) => claim.claimer.toLowerCase() === address?.toLowerCase()
       );
-      
+
       // 如果是创建者且还有剩余资金可提取，在已领取状态下显示提取按钮
-      if (isOwner && hasUnclaimedFunds && canWithdraw) {
+      if (isOwner && hasUnclaimedFunds && !hasWithdrawn && canWithdraw) {
         return (
           <div className="w-full space-y-2">
             <button
@@ -205,7 +239,9 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
               <span className="text-xs">✅ 你已领取过这个红包</span>
               {userClaim && (
                 <span className="text-xs font-bold">
-                  +{parseFloat(formatEther(BigInt(userClaim.amount))).toFixed(4)} ETH
+                  +
+                  {parseFloat(formatEther(BigInt(userClaim.amount))).toFixed(4)}{" "}
+                  ETH
                 </span>
               )}
             </button>
@@ -233,7 +269,7 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
           </div>
         );
       }
-      
+
       return (
         <div className="w-full">
           <button
@@ -243,7 +279,8 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
             <span className="text-xs">✅ 你已领取过这个红包</span>
             {userClaim && (
               <span className="text-xs font-bold mt-0.5">
-                +{parseFloat(formatEther(BigInt(userClaim.amount))).toFixed(4)} ETH
+                +{parseFloat(formatEther(BigInt(userClaim.amount))).toFixed(4)}{" "}
+                ETH
               </span>
             )}
           </button>
@@ -252,7 +289,7 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
     }
 
     // 创建者可以提取剩余资金（满5分钟后且没有抢过红包）
-    if (isOwner && hasUnclaimedFunds && canWithdraw) {
+    if (isOwner && hasUnclaimedFunds && !hasWithdrawn && canWithdraw) {
       return (
         <div className="w-full space-y-2">
           <button
@@ -300,9 +337,9 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
         </div>
       );
     }
-    
+
     // 创建者等待提取（未满5分钟且没有抢过红包）
-    if (isOwner && hasUnclaimedFunds && !canWithdraw) {
+    if (isOwner && hasUnclaimedFunds && !hasWithdrawn && !canWithdraw) {
       return (
         <div className="w-full space-y-2">
           <button
@@ -382,12 +419,14 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
           <div className="text-gray-600 text-xs mb-1 line-clamp-2 leading-relaxed">
             "{packet.message}"
           </div>
-          <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-            isFullyClaimed 
-              ? 'bg-gray-100 text-gray-600' 
-              : 'bg-green-100 text-green-700'
-          }`}>
-            {isFullyClaimed ? '已抢完' : `剩余 ${totalCount - claimedCount} 个`}
+          <div
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+              isFullyClaimed
+                ? "bg-gray-100 text-gray-600"
+                : "bg-green-100 text-green-700"
+            }`}
+          >
+            {isFullyClaimed ? "已抢完" : `剩余 ${totalCount - claimedCount} 个`}
           </div>
         </div>
 
@@ -395,7 +434,10 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
         <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg mb-2 flex-shrink-0">
           <UserAvatar address={packet.owner} size="sm" />
           <div className="flex-1 min-w-0">
-            <UserName address={packet.owner} className="text-gray-800 text-xs font-medium truncate" />
+            <UserName
+              address={packet.owner}
+              className="text-gray-800 text-xs font-medium truncate"
+            />
             <div className="text-gray-500 text-xs mt-0.5">
               {formatCreationTime()}
             </div>
@@ -409,32 +451,38 @@ export function RedPacketCard({ packet, onClaimSuccess }: RedPacketCardProps) {
         <div className="mb-2 flex-shrink-0">
           <div className="flex justify-between text-xs text-gray-600 mb-1">
             <span>领取进度</span>
-            <span>{claimedCount}/{totalCount}</span>
+            <span>
+              {claimedCount}/{totalCount}
+            </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div 
+            <div
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                isFullyClaimed ? 'bg-gray-400' : 'bg-green-500'
+                isFullyClaimed ? "bg-gray-400" : "bg-green-500"
               }`}
               style={{ width: `${(claimedCount / totalCount) * 100}%` }}
             />
           </div>
         </div>
 
-        {/* 创建者提取信息 - 只在红包有剩余资金时显示 */}
+        {/* 创建者提取信息 */}
         {isOwner && hasUnclaimedFunds && (
           <div className="mb-2 p-2 bg-blue-50 rounded-lg flex-shrink-0">
-            <div className="text-blue-800 text-xs font-medium">🏦 创建者权限</div>
+            <div className="text-blue-800 text-xs font-medium">
+              🏦 创建者权限
+            </div>
             <div className="text-blue-700 text-xs">
-              {canWithdraw ? "✅ 5分钟已过，可提取剩余资金" : `⏰ ${getTimeRemaining()}`}
+              {hasWithdrawn
+                ? "✅ 剩余资金已提取"
+                : canWithdraw
+                ? "✅ 5分钟已过，可提取剩余资金"
+                : `⏰ ${getTimeRemaining()}`}
             </div>
           </div>
         )}
 
         {/* 操作按钮区域 - 固定在底部 */}
-        <div className="mt-auto pt-2 flex-shrink-0">
-          {renderActionButton()}
-        </div>
+        <div className="mt-auto pt-2 flex-shrink-0">{renderActionButton()}</div>
       </div>
     </div>
   );

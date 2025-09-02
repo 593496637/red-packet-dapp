@@ -14,6 +14,8 @@ function App() {
   
   // 存储ENS刷新函数的ref
   const ensRefreshRef = useRef<(() => void) | null>(null);
+  // 存储红包列表刷新函数的ref
+  const redPacketListRefreshRef = useRef<(() => void) | null>(null);
 
   // 启用网络变更监听
   useNetworkMonitor({
@@ -40,6 +42,16 @@ function App() {
     registerRefreshFunction: (fn: () => void) => {
       ensRefreshRef.current = fn;
     }
+  };
+
+  // 处理红包创建成功
+  const handleRedPacketCreated = () => {
+    // 刷新红包列表
+    if (redPacketListRefreshRef.current) {
+      redPacketListRefreshRef.current();
+    }
+    // 关闭弹窗
+    setShowCreateModal(false);
   };
 
   return (
@@ -106,7 +118,11 @@ function App() {
             </div>
 
             {/* 红包列表 */}
-            <RedPacketList />
+            <RedPacketList 
+              onRefreshRegister={(refreshFn) => {
+                redPacketListRefreshRef.current = refreshFn;
+              }}
+            />
           </div>
         </main>
       </div>
@@ -118,7 +134,7 @@ function App() {
         title="发红包"
         maxWidth="md"
       >
-        <CreateRedPacket />
+        <CreateRedPacket onSuccess={handleRedPacketCreated} />
       </Modal>
 
     </ENSRefreshContext.Provider>

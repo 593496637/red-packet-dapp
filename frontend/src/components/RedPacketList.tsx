@@ -1,10 +1,17 @@
 import { useQuery, gql } from "@apollo/client";
+import { useEffect } from "react";
 import { RedPacketCard } from "./RedPacketCard";
 
 // TypeScript interfaces
 interface Claim {
   claimer: string;
   amount: string;
+}
+
+interface Withdrawal {
+  owner: string;
+  amount: string;
+  timestamp: string;
 }
 
 interface RedPacket {
@@ -16,6 +23,7 @@ interface RedPacket {
   totalCount: string;
   creationTime: string;
   claims: Claim[];
+  withdrawals: Withdrawal[];
 }
 
 interface RedPacketData {
@@ -38,11 +46,21 @@ const GET_RED_PACKETS = gql`
         claimer
         amount
       }
+      # 获取关联的 withdrawals 列表
+      withdrawals {
+        owner
+        amount
+        timestamp
+      }
     }
   }
 `;
 
-export function RedPacketList() {
+interface RedPacketListProps {
+  onRefreshRegister?: (refreshFn: () => void) => void;
+}
+
+export function RedPacketList({ onRefreshRegister }: RedPacketListProps) {
   // 禁用持续轮询，但允许必要的刷新
   const { loading, error, data, refetch } = useQuery<RedPacketData>(
     GET_RED_PACKETS,
@@ -60,6 +78,13 @@ export function RedPacketList() {
   const handleRefresh = () => {
     refetch();
   };
+
+  // 注册刷新函数到父组件
+  useEffect(() => {
+    if (onRefreshRegister) {
+      onRefreshRegister(handleRefresh);
+    }
+  }, [onRefreshRegister]);
 
   if (loading && !data) {
     return (
