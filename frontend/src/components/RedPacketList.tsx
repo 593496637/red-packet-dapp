@@ -1,5 +1,5 @@
 import { useQuery, gql } from "@apollo/client";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { RedPacketCard } from "./RedPacketCard";
 
 // TypeScript interfaces
@@ -75,16 +75,16 @@ export function RedPacketList({ onRefreshRegister }: RedPacketListProps) {
   );
 
   // 手动刷新函数
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     refetch();
-  };
+  }, [refetch]);
 
   // 注册刷新函数到父组件
   useEffect(() => {
     if (onRefreshRegister) {
       onRefreshRegister(handleRefresh);
     }
-  }, [onRefreshRegister]);
+  }, [onRefreshRegister, handleRefresh]);
 
   if (loading && !data) {
     return (

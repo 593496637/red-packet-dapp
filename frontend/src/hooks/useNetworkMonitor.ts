@@ -19,6 +19,10 @@ export function useNetworkMonitor({
   const chainId = useChainId();
   const { isConnected } = useAccount();
   const previousChainId = useRef<number | null>(null);
+  const onENSRefreshNeededRef = useRef(onENSRefreshNeeded);
+  
+  // 保持ref中的回调为最新
+  onENSRefreshNeededRef.current = onENSRefreshNeeded;
 
   // 获取网络名称
   const getNetworkName = (chainId: number): string => {
@@ -70,10 +74,10 @@ export function useNetworkMonitor({
       }
 
       // 触发ENS刷新回调
-      if (onENSRefreshNeeded) {
+      if (onENSRefreshNeededRef.current) {
         // 延迟触发，确保网络切换完成
         setTimeout(() => {
-          onENSRefreshNeeded();
+          onENSRefreshNeededRef.current?.();
         }, 1000);
       }
 
